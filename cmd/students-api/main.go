@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/ageniouscoder/student-api/internal/config"
+	"github.com/ageniouscoder/student-api/internal/http/handler/student"
 )
 
 func main() {
@@ -19,9 +20,7 @@ func main() {
 	//database setup
 	//setup route
 	router := http.NewServeMux()
-	router.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Welcome to the students api"))
-	})
+	router.HandleFunc("POST /api/students", student.New())
 	//setup server
 	server := http.Server{
 		Addr:    cfg.Addr,
