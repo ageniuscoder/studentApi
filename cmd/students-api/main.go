@@ -12,15 +12,24 @@ import (
 
 	"github.com/ageniouscoder/student-api/internal/config"
 	"github.com/ageniouscoder/student-api/internal/http/handler/student"
+	"github.com/ageniouscoder/student-api/internal/storage/sqlite"
 )
 
 func main() {
 	//load config
 	cfg := config.MustLoad()
 	//database setup
+	storage, err := sqlite.New(cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	slog.Info("database intialized", slog.String("env", cfg.Env))
 	//setup route
 	router := http.NewServeMux()
-	router.HandleFunc("POST /api/students", student.New())
+	router.HandleFunc("POST /api/students", student.New(storage))
+
+	router.HandleFunc("GET /api/students/{id}", student.GetById(storage))
 	//setup server
 	server := http.Server{
 		Addr:    cfg.Addr,
