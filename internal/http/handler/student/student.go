@@ -44,6 +44,8 @@ func New(storage storage.Storage) http.HandlerFunc {
 		}
 		slog.Info("user created succesfully", slog.String("userId", fmt.Sprint(lastId)))
 
+		//
+
 		response.WriteJson(w, http.StatusCreated, map[string]int64{"id": lastId})
 	}
 }
@@ -83,5 +85,36 @@ func GetList(storage storage.Storage) http.HandlerFunc {
 		}
 
 		response.WriteJson(w, http.StatusOK, students)
+	}
+}
+
+func UpdateByid(storage storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+		if err != nil {
+			response.WriteJson(w, http.StatusBadRequest, response.GenralError(err))
+			return
+		}
+
+		var student types.Student
+		err = json.NewDecoder(r.Body).Decode(&student)
+
+		if errors.Is(err, io.EOF) {
+			response.WriteJson(w, http.StatusBadRequest, response.GenralError(fmt.Errorf("body is empty")))
+			return
+		}
+		if err != nil {
+			response.WriteJson(w, http.StatusBadRequest, response.GenralError(err))
+			return
+		}
+		slog.Info("Start updating student with ", slog.Int64("id", id))
+		rowAffected, err := storage.UpdateStudent(student.Name, student.Email, student.Age, id)
+		if err != nil {
+			response.WriteJson(w, http.StatusInternalServerError, response.GenralError(err))
+			return
+		}
+		slog.Info("User updated Succesfully")
+		response.WriteJson(w, http.StatusOK, map[string]int64{"No of rows Updated": rowAffected})
+
 	}
 }
